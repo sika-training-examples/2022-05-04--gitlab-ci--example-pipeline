@@ -8,3 +8,7 @@
 # Generic
 *.log
 *.backup
+
+# App
+/hello-server
+/hello-server.exe
