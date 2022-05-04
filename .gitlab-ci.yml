@@ -39,3 +39,16 @@ build_docker:
     - docker login $CI_REGISTRY -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD
     - docker build -t $IMAGE .
     - docker push $IMAGE
+
+deploy_dev:
+  stage: deploy_dev
+  needs:
+    - build_docker
+  script:
+    - helm repo add sikalabs https://helm.sikalabs.io
+    - helm upgrade --install $CI_COMMIT_REF_SLUG --create-namespace sikalabs/one-image
+      --set host=$CI_PROJECT_PATH_SLUG-$CI_COMMIT_REF_SLUG.$KUBE_INGRESS_BASE_DOMAIN
+      --set image=$IMAGE
+  environment:
+    name: dev/$CI_COMMIT_REF_SLUG
+    url: https://$CI_PROJECT_PATH_SLUG-$CI_COMMIT_REF_SLUG.$KUBE_INGRESS_BASE_DOMAIN
