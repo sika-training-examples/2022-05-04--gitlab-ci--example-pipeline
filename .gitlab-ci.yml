@@ -98,7 +98,7 @@ deploy_prod:
     HOST: $HOST_PROD
     ENV: prod
   environment:
-    name: dev/$CI_COMMIT_REF_SLUG
+    name: prod
     url: https://hello-server.$BASE_DOMAIN
     on_stop: stop_dev
 
