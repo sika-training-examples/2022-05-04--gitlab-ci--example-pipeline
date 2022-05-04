@@ -9,6 +9,8 @@ stages:
 
 variables:
   IMAGE: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG-$CI_COMMIT_SHORT_SHA-$CI_PIPELINE_ID
+  HOST_DEV: $CI_PROJECT_PATH_SLUG-$CI_COMMIT_REF_SLUG.$BASE_DOMAIN
+  HOST_PROD: hello-server.$BASE_DOMAIN
 
 build_bin:
   image: golang:1.18
@@ -49,7 +51,7 @@ deploy_dev:
   extends:
     - .dev
   variables:
-    HOST: $CI_PROJECT_PATH_SLUG-$CI_COMMIT_REF_SLUG.$KUBE_INGRESS_BASE_DOMAIN
+    HOST: $HOST_DEV
   script:
     - helm repo add sikalabs https://helm.sikalabs.io
     - helm upgrade --install $CI_COMMIT_REF_SLUG --create-namespace sikalabs/one-image
@@ -72,3 +74,10 @@ stop_dev:
   environment:
     name: dev/$CI_COMMIT_REF_SLUG
     action: stop
+
+deploy_dev_test:
+  stage: deploy_dev_test
+  variables:
+    HOST: $HOST_DEV
+  script:
+    - curl $HOST
