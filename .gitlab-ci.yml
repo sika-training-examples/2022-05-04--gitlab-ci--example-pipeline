@@ -55,3 +55,15 @@ deploy_dev:
   environment:
     name: dev/$CI_COMMIT_REF_SLUG
     url: https://$CI_PROJECT_PATH_SLUG-$CI_COMMIT_REF_SLUG.$KUBE_INGRESS_BASE_DOMAIN
+    on_stop: stop_dev
+
+stop_dev:
+  stage: deploy_dev
+  when: manual
+  variables:
+    GIT_STRATEGY: none
+  script:
+    - helm uninstall $CI_COMMIT_REF_SLUG
+  environment:
+    name: dev/$CI_COMMIT_REF_SLUG
+    action: stop
