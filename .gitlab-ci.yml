@@ -82,4 +82,4 @@ deploy_dev_test:
   variables:
     HOST: $HOST_DEV
   script:
-    - curl $HOST
+    - curl -L https://$HOST
