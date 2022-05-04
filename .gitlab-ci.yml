@@ -105,6 +105,6 @@ deploy_prod:
 deploy_prod_test:
   stage: deploy_prod_test
   needs:
-    - deploy_dev
+    - deploy_prod
   script:
     - curl -L https://$HOST_PROD
