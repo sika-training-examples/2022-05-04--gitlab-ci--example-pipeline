@@ -77,6 +77,8 @@ stop_dev:
 
 deploy_dev_test:
   stage: deploy_dev_test
+  needs:
+    - deploy_dev
   variables:
     HOST: $HOST_DEV
   script:
