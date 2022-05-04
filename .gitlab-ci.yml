@@ -86,9 +86,14 @@ deploy_dev_test:
   script:
     - curl -L https://$HOST_DEV
 
+.prod_only:
+  rules:
+    - if: $CI_COMMIT_REF_SLUG == "master"
+
 deploy_prod:
   extends:
     - .deploy
+    - .prod_only
   stage: deploy_prod
   needs:
     - deploy_dev_test
@@ -102,6 +107,8 @@ deploy_prod:
     url: https://hello-server.$BASE_DOMAIN
 
 deploy_prod_test:
+  extends:
+    - .prod_only
   stage: deploy_prod_test
   needs:
     - deploy_prod
