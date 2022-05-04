@@ -40,10 +40,14 @@ build_docker:
     - docker build -t $IMAGE .
     - docker push $IMAGE
 
-deploy_dev:
+.dev:
   stage: deploy_dev
   needs:
     - build_docker
+
+deploy_dev:
+  extends:
+    - .dev
   variables:
     HOST: $CI_PROJECT_PATH_SLUG-$CI_COMMIT_REF_SLUG.$KUBE_INGRESS_BASE_DOMAIN
   script:
@@ -58,7 +62,8 @@ deploy_dev:
     on_stop: stop_dev
 
 stop_dev:
-  stage: deploy_dev
+  extends:
+    - .dev
   when: manual
   variables:
     GIT_STRATEGY: none
