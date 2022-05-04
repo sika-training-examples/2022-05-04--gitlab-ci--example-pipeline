@@ -44,11 +44,14 @@ deploy_dev:
   stage: deploy_dev
   needs:
     - build_docker
+  variables:
+    HOST: $CI_PROJECT_PATH_SLUG-$CI_COMMIT_REF_SLUG.$KUBE_INGRESS_BASE_DOMAIN
   script:
     - helm repo add sikalabs https://helm.sikalabs.io
     - helm upgrade --install $CI_COMMIT_REF_SLUG --create-namespace sikalabs/one-image
-      --set host=$CI_PROJECT_PATH_SLUG-$CI_COMMIT_REF_SLUG.$KUBE_INGRESS_BASE_DOMAIN
+      --set host=$HOST
       --set image=$IMAGE
+    - slu wait-for tls -a $HOST:443 --timeout 60
   environment:
     name: dev/$CI_COMMIT_REF_SLUG
     url: https://$CI_PROJECT_PATH_SLUG-$CI_COMMIT_REF_SLUG.$KUBE_INGRESS_BASE_DOMAIN
