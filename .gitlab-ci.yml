@@ -100,7 +100,6 @@ deploy_prod:
   environment:
     name: prod
     url: https://hello-server.$BASE_DOMAIN
-    on_stop: stop_dev
 
 deploy_prod_test:
   stage: deploy_prod_test
