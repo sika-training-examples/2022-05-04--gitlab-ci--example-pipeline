@@ -11,6 +11,7 @@ variables:
   IMAGE: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG-$CI_COMMIT_SHORT_SHA-$CI_PIPELINE_ID
   HOST_DEV: $CI_PROJECT_PATH_SLUG-$CI_COMMIT_REF_SLUG.$BASE_DOMAIN
   HOST_PROD: hello-server.$BASE_DOMAIN
+  ENV: dev
 
 build_bin:
   image: golang:1.18
@@ -47,17 +48,20 @@ build_docker:
   needs:
     - build_docker
 
-deploy_dev:
-  extends:
-    - .dev
-  variables:
-    HOST: $HOST_DEV
+.deploy:
   script:
     - helm repo add sikalabs https://helm.sikalabs.io
-    - helm upgrade --install $CI_COMMIT_REF_SLUG --create-namespace sikalabs/one-image
+    - helm upgrade --install $CI_COMMIT_REF_SLUG-$ENV --create-namespace sikalabs/one-image
       --set host=$HOST
       --set image=$IMAGE
     - slu wait-for tls -a $HOST:443 --timeout 60
+
+deploy_dev:
+  extends:
+    - .dev
+    - .deploy
+  variables:
+    HOST: $HOST_DEV
   environment:
     name: dev/$CI_COMMIT_REF_SLUG
     url: https://$CI_PROJECT_PATH_SLUG-$CI_COMMIT_REF_SLUG.$KUBE_INGRESS_BASE_DOMAIN
@@ -70,7 +74,7 @@ stop_dev:
   variables:
     GIT_STRATEGY: none
   script:
-    - helm uninstall $CI_COMMIT_REF_SLUG
+    - helm uninstall $CI_COMMIT_REF_SLUG-$ENV
   environment:
     name: dev/$CI_COMMIT_REF_SLUG
     action: stop
@@ -79,7 +83,28 @@ deploy_dev_test:
   stage: deploy_dev_test
   needs:
     - deploy_dev
-  variables:
-    HOST: $HOST_DEV
   script:
-    - curl -L https://$HOST
+    - curl -L https://$HOST_DEV
+
+deploy_prod:
+  extends:
+    - .deploy
+  stage: deploy_prod
+  needs:
+    - deploy_dev_test
+  when: manual
+  allow_failure: false
+  variables:
+    HOST: $HOST_PROD
+    ENV: prod
+  environment:
+    name: dev/$CI_COMMIT_REF_SLUG
+    url: https://hello-server.$BASE_DOMAIN
+    on_stop: stop_dev
+
+deploy_prod_test:
+  stage: deploy_prod_test
+  needs:
+    - deploy_dev
+  script:
+    - curl -L https://$HOST_PROD
